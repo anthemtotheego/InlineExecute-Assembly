@@ -33,10 +33,14 @@ BOOL ReadSlot(char* output, HANDLE* mailHandle)
 	LPSTR lpszBuffer = NULL;
 	size_t size = 65535;
 	char* achID = (char*)intAlloc(size);
+	if (NULL == achID)
+		return FALSE;
 	memset(achID, 0, size);
 	DWORD cAllMessages = 0;
 	HANDLE hEvent;
 	OVERLAPPED ov;
+
+	_CloseHandle CloseHandle = (_CloseHandle) GetProcAddress(GetModuleHandleA("kernel32.dll"), "CloseHandle");
 
 	hEvent = KERNEL32$CreateEventA(NULL, FALSE, FALSE, NULL);
 	if (NULL == hEvent)
@@ -53,11 +57,13 @@ BOOL ReadSlot(char* output, HANDLE* mailHandle)
 
 	if (!fResult)
 	{
+		CloseHandle (hEvent);
 		return FALSE;
 	}
 
 	if (cbMessage == MAILSLOT_NO_MESSAGE)
 	{
+		CloseHandle (hEvent);
 		return TRUE;
 	}
 	
@@ -68,7 +74,10 @@ BOOL ReadSlot(char* output, HANDLE* mailHandle)
 		//Allocate memory for the message. 
 		lpszBuffer = (LPSTR)KERNEL32$GlobalAlloc(GPTR, KERNEL32$lstrlenA((LPSTR)achID) * sizeof(CHAR) + cbMessage);
 		if (NULL == lpszBuffer)
+		{
+			CloseHandle (hEvent);
 			return FALSE;
+		}
 		lpszBuffer[0] = '\0';
 
 		fResult = KERNEL32$ReadFile(*mailHandle,
@@ -80,6 +89,7 @@ BOOL ReadSlot(char* output, HANDLE* mailHandle)
 		if (!fResult)
 		{
 			KERNEL32$GlobalFree((HGLOBAL)lpszBuffer);
+			CloseHandle (hEvent);
 			return FALSE;
 		}
 
@@ -94,6 +104,8 @@ BOOL ReadSlot(char* output, HANDLE* mailHandle)
 
 		if (!fResult)
 		{
+			KERNEL32$GlobalFree((HGLOBAL)lpszBuffer);
+			CloseHandle (hEvent);
 			return FALSE;
 		}
 		
@@ -101,7 +113,6 @@ BOOL ReadSlot(char* output, HANDLE* mailHandle)
 	
 	cbMessage = 0;
 	KERNEL32$GlobalFree((HGLOBAL)lpszBuffer);
-	_CloseHandle CloseHandle = (_CloseHandle) GetProcAddress(GetModuleHandleA("kernel32.dll"), "CloseHandle");
 	CloseHandle(hEvent);
 	return TRUE;
 }
@@ -382,8 +393,8 @@ void go(char* args, int length) {//Executes .NET assembly in memory
 	int argumentCount = 0;
 	HANDLE stdOutput;
 	HANDLE stdError;
-	HANDLE mainHandle;
-	HANDLE hFile;
+	HANDLE mainHandle = INVALID_HANDLE_VALUE;
+	HANDLE hFile      = INVALID_HANDLE_VALUE;
 	size_t wideSize = 0;
 	size_t wideSize2 = 0;
 	BOOL success = 1;
@@ -580,8 +591,10 @@ void go(char* args, int length) {//Executes .NET assembly in memory
 
 	//Close handles
 	_CloseHandle CloseHandle = (_CloseHandle) GetProcAddress(GetModuleHandleA("kernel32.dll"), "CloseHandle");
-	CloseHandle(mainHandle);
-	CloseHandle(hFile);
+	if (INVALID_HANDLE_VALUE != mainHandle)
+		CloseHandle(mainHandle);
+	if (INVALID_HANDLE_VALUE != hFile)
+		CloseHandle(hFile);
 	
 	//Revert stdout back to original handles
 	success = SetStdHandle(((DWORD)-11), stdOutput);
