@@ -2,7 +2,7 @@
 beacon_command_register(
 "inlineExecute-Assembly", 
 "Load CLR if not already loaded and inject .NET assembly into current beacon process. Avoids creating a new sacraficial process via fork and run technique. Created by anthemtotheego modified by Ceramicskate0", 
-"Synopsis: inlineExecute-Assembly --dotnetassembly /root/Downloads/release/Assembly.exe --assemblyargs Args_To_Pass --amsi --etw");
+"Synopsis: inlineExecute-Assembly --dotnetassembly /root/Downloads/release/Assembly.exe --assemblyargs Args_To_Pass");
 
 global('$etw $amsi $appDomain $version');
 
