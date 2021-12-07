@@ -7,16 +7,26 @@ beacon_command_register(
 global('$etw $amsi $appDomain $version');
 
 #Global vars don't change
-$etw = 0;
-$revertETW = 0;
-$amsi = 0;
+$etw = 1;
+$revertETW = 1;
+$amsi = 1;
 $mailSlot = 0;
 $entryPoint = 1;
+@alphabet = @(“a”,“_”,“-”,“b”,“c”,“d”,“e”,“f”,“g”,“h”,“i”,“j”,“k”,“l”,“m”,“n”,“o”,“p”,“q”,“r”,“s”,“t”,“u”,“v”,“w”,“x”,“y”,“z”,“A”,“B”,“C”,“D”,“E”,“F”,“G”,“H”,“I”,“J”,“K”,“L”,“M”,“N”,“O”,“P”,“Q”,“R”,“S”,“T”,“U”,“V”,“W”,“X”,“Y”,“Z”);
+$len = rand(11) + 5;	
+for($i = 0; $i < $len; $i++){
+    $name .= rand(@alphabet);
 
 #Default values set here - if you don't want to use flags to change -> change here
-$appDomain = "totesLegit";
-$pipeName = "totesLegit";
-$mailSlotName = "totesLegit";
+$appDomain = rand(@name);
+$len = rand(11) + 5;	
+for($i = 0; $i < $len; $i++){
+    $name .= rand(@alphabet);
+$pipeName = rand(@name);
+$len = rand(11) + 5;	
+for($i = 0; $i < $len; $i++){
+    $name .= rand(@alphabet);
+$mailSlotName = rand(@name);
 
 
 alias inlineExecute-Assembly {
