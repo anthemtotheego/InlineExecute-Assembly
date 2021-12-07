@@ -372,7 +372,7 @@ alias inlineExecute-Assembly {
      # pack our arguments
     $bofArgs = bof_pack($1, "ziiiiizzzib", $_appDomainArgs, $_amsi, $_etw, $_revertETW, $_mailSlot, $_entryPoint, $_mailSlotNameArgs, $_pipeNameArgs, $_assemblyWithArgs, $assemblyLength, $assemblyBytes);
     # announce what we're doing
-    btask($1, "Running CSharp Assembly Inline Details Below (REF: 1=yes 0=no):\n Assembly Name: ".$_dotNetAssembly."\n Assembly Args: ".$_dotNetAssemblyArgs."\n AppDomain: ".$_appDomain."\n Pipe Name: ".$_pipeName."\n MailSlot Name: ".$_mailSlotName."\n ETW Patch: ".$_etw."\n AMSI Patch: ".$_amsi."\n Revert ETW Patch: ".$_revertETW."");
+    btask($1, "Running CSharp Assembly Inline Details Below (REF: 1=yes 0=no):\n Assembly Name: ".$_dotNetAssembly."\n Assembly Args: ".$_assemblyWithArgs."\n AppDomain: ".$_appDomain."\n Pipe Name: ".$_pipeName."\n MailSlot Name: ".$_mailSlotName."\n ETW Patch: ".$_etw."\n AMSI Patch: ".$_amsi."\n Revert ETW Patch: ".$_revertETW."");
 
     # execute it.
     beacon_inline_execute($1, $bof, "go", $bofArgs);
