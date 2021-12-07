@@ -50,13 +50,13 @@ alias inlineExecute-Assembly {
     for($i = 0; $i < $len; $i++){
         $_appDomain .= rand(@alphabet);
     }
-    #$appDomain = @name;
+    $appDomain = $_appDomain;
 
     $len = rand(11) + 5;	
     for($i = 0; $i < $len; $i++){
         $_pipeName .= rand(@alphabet);
     }
-    #$pipeName = @name;
+    $pipeName = $_pipeName;
 
     $len = rand(11) + 5;	
     for($i = 0; $i < $len; $i++){
