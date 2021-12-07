@@ -402,7 +402,7 @@ void go(char* args, int length) {//Executes .NET assembly in memory
 	char* returnData = (char*)intAlloc(size);
 	memset(returnData, 0, size);
 	
-	/*Debug*/
+	/*Debug
 	BeaconPrintf(CALLBACK_OUTPUT, "[+] DEBUG INFO:\n");//Debug Only
 	BeaconPrintf(CALLBACK_OUTPUT, "[+] appdomain = %s\n", appDomain);//Debug Only
 	BeaconPrintf(CALLBACK_OUTPUT, "[+] amsi = %d\n", amsi);//Debug Only
@@ -416,7 +416,7 @@ void go(char* args, int length) {//Executes .NET assembly in memory
 	BeaconPrintf(CALLBACK_OUTPUT, "[+] mailslot Path name = %s\n", slotPath);//Debug Only
 	BeaconPrintf(CALLBACK_OUTPUT, "[+] assemblyArguments = %s\n", assemblyArguments);//Debug Only
 	BeaconPrintf(CALLBACK_OUTPUT, "[+] assemblyByteLen = %d\n", assemblyByteLen);//Debug Only
-	
+	*/
 	
 	//Determine .NET assemblie version
 	if(FindVersion((void*)assemblyBytes, assemblyByteLen))
