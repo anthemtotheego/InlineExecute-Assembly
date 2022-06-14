@@ -1,0 +1,15 @@
+ROOT_DIR = $(MAKEDIR)
+BIN_DIR = $(ROOT_DIR)\inlineExecuteAssembly
+SRC_DIR = $(ROOT_DIR)\src
+
+# Compiler and options
+CC = cl.exe
+
+clean:
+	-@if exist $(BIN_DIR)\inlineExecute-Assemblyx64.o rm $(BIN_DIR)\inlineExecute-Assemblyx64.o
+	-@if exist $(BIN_DIR))\inlineExecute-Assemblyx86.o rm $(BIN_DIR)\inlineExecute-Assemblyx86.o
+
+X64:
+	$(CC) /c $(SRC_DIR)\inlineExecute-Assembly.c /GS- /Fo$(BIN_DIR)\inlineExecute-Assemblyx64.o
+X86:
+	$(CC) /c $(SRC_DIR)\inlineExecute-Assembly.c /GS- /Fo$(BIN_DIR)\inlineExecute-Assemblyx86.o
