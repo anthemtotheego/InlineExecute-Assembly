@@ -340,7 +340,6 @@ alias inlineExecute-Assembly {
 
     #Reading assembly bytes and get the size in bytes
     $fileHandle = openf($_dotNetAssembly);
-    $assemblyLength = lof($_dotNetAssembly);
     $assemblyBytes = readb($fileHandle, -1);
     closef($fileHandle);
 
@@ -349,7 +348,7 @@ alias inlineExecute-Assembly {
   #-------------------------------------- Package and ship it --------------------------------------#
 
      # pack our arguments
-    $bofArgs = bof_pack($1, "ziiiiizzzib", $_appDomainArgs, $_amsi, $_etw, $_revertETW, $_mailSlot, $_entryPoint, $_mailSlotNameArgs, $_pipeNameArgs, $_assemblyWithArgs, $assemblyLength, $assemblyBytes);
+    $bofArgs = bof_pack($1, "ziiiiizzzb", $_appDomainArgs, $_amsi, $_etw, $_revertETW, $_mailSlot, $_entryPoint, $_mailSlotNameArgs, $_pipeNameArgs, $_assemblyWithArgs, $assemblyBytes);
 
     # announce what we're doing 
     btask($1, "Running inlineExecute-Assembly by (@anthemtotheego)");

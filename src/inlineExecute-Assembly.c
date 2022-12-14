@@ -336,7 +336,7 @@ void go(char* args, int length) {//Executes .NET assembly in memory
 	BOOL revertETW = 0;
 	BOOL mailSlot = 0;
 	ULONG entryPoint = 1;
-	size_t assemblyByteLen = 0;
+	int assemblyByteLen = 0;
 	
 	//Extract data sent
 	appDomain = BeaconDataExtract(&parser, NULL);
@@ -348,8 +348,7 @@ void go(char* args, int length) {//Executes .NET assembly in memory
 	slotName = BeaconDataExtract(&parser, NULL);
 	pipeName = BeaconDataExtract(&parser, NULL);
 	assemblyArguments = BeaconDataExtract(&parser, NULL);
-	assemblyByteLen = BeaconDataInt(&parser);
-	char* assemblyBytes = BeaconDataExtract(&parser, NULL);
+	char* assemblyBytes = BeaconDataExtract(&parser, &assemblyByteLen);
 	
 	//Create slot and pipe names	
 	SIZE_T pipeNameLen = MSVCRT$strlen(pipeName);
